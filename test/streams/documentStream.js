@@ -522,3 +522,67 @@ tape( 'documentStream rejects invalid popularity', function(test) {
     test.end();
   });
 });
+
+
+tape('documentStream accepts bounded valid time', function(test) {
+  const input = {
+    NUMBER: '5',
+    STREET: '101st Avenue',
+    LAT: 5,
+    LON: 6,
+    VALIDTIME_START: '1800',
+    VALIDTIME_END: '1800',
+  };
+
+  const stats = { badRecordCount: 0 };
+  const documentStream = DocumentStream.create('prefix', stats);
+
+  test_stream([input], documentStream, function(err, actual) {
+    test.equal(actual.length, 1, 'the document should be pushed' );
+    test.equal(stats.badRecordCount, 0, 'bad record count unchanged');
+    test.same(actual[0].getValidTime(), {start: -62091, end: -62091});
+    test.end();
+  });
+});
+
+
+tape('documentStream accepts semi-bounded valid time', function(test) {
+  const input = {
+    NUMBER: '5',
+    STREET: '101st Avenue',
+    LAT: 5,
+    LON: 6,
+    VALIDTIME_START: '1800'
+  };
+
+  const stats = { badRecordCount: 0 };
+  const documentStream = DocumentStream.create('prefix', stats);
+
+  test_stream([input], documentStream, function(err, actual) {
+    test.equal(actual.length, 1, 'the document should be pushed' );
+    test.equal(stats.badRecordCount, 0, 'bad record count unchanged');
+    test.same(actual[0].getValidTime(), {start: -62091});
+    test.end();
+  });
+});
+
+
+tape('documentStream rejects invalid valid time', function(test) {
+  const input = {
+    NUMBER: '5',
+    STREET: '101st Avenue',
+    LAT: 5,
+    LON: 6,
+    VALIDTIME_START: 'not a valid date',
+    VALIDTIME_END: 'not a valid date',
+  };
+
+  const stats = { badRecordCount: 0 };
+  const documentStream = DocumentStream.create('prefix', stats);
+
+  test_stream([input], documentStream, function(err, actual) {
+    test.equal(actual.length, 0, 'the document should be skipped' );
+    test.equal(stats.badRecordCount, 1, 'bad record count went up by 1');
+    test.end();
+  });
+});
